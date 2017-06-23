@@ -1,0 +1,77 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Untitled Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: auto;
+        }
+        
+        .axis text {
+            font-size: 11px;
+            fill: blue;
+        }
+        
+        .tooltip {
+            position: absolute;
+            /* left: 20px; */
+            /* top:  100px; */
+            background: #fff;
+            width: 150px;
+            height: auto;
+            padding: 0px 10px;
+            border-radius: 5px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tooltip.hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script>
+      
+
+        //------------------------ 作業5 癌症發生率---------------------------------
+        
+        
+        //用d3讀取csv 癌症
+        d3.csv("cancer_data.csv", mid, function(dataSet) {
+            //console.table(dataSet);
+            dataSet = dataSet;
+            
+            var setting = {xData:"date", yData:"age_rate", rData:"count", sData1:"city", sData2:"category"};
+            create_2dScatter(dataSet, setting);
+
+        });
+        
+        function mid(d) {
+            d.age_rate = +d.age_rate;
+            d.date = +d.date;
+            d.count = +d.count;
+            return d;
+        }
+        
+        
+
+       
+    </script>
+
+
+
+
+
+
+</body>
+
+</html>

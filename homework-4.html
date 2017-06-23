@@ -1,0 +1,291 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Untitled Document</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.6/d3.min.js"></script>
+    <script src="script.js"></script>
+    <style>
+        .axis path,
+        .axis line {
+            fill: none;
+            stroke: black;
+            shape-rendering: auto;
+        }
+        
+        .axis text {
+            font-size: 11px;
+            fill: blue;
+        }
+        
+        .tooltip {
+            position: absolute;
+            /* left: 20px; */
+            /* top:  100px; */
+            background: #fff;
+            width: 150px;
+            height: auto;
+            padding: 0px 10px;
+            border-radius: 5px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .tooltip.hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+    <script>
+        //------------------------ 作業1 ---------------------------------
+        d3.select("body").append("p").text("1.加上X座標軸，以G為單位");
+        var p = 20;
+        var w = 600;
+        var h = 350;
+        var lineHeight = 30;
+        var rect_p = 250;
+
+        var svg = d3.select('body').append('svg').attr({
+            'width': w,
+            'height': h
+        });
+
+
+        function make_ob(svg, ob, dataset) {
+            var selection = svg.selectAll(ob).data(dataset);
+            selection.enter().append(ob);
+            selection.exit().remove();
+
+            return selection;
+        }
+
+        d3.json("invoice-taipei.json", function(dataset) {
+
+            var body = d3.select('body');
+
+            fDataSet = dataset.filter(function(d) {
+                return d.amount > 1000000000 && d.date === "2016/8/1" && d.city === "臺北市";
+            })
+
+            //console.log(fDataSet);
+
+
+
+            var xScale = d3.scale.linear()
+                .domain([
+                    /*
+                                        d3.min(fDataSet, function(d) {
+                                            return d.amount;
+                                        })*/
+                    0,
+                    d3.max(fDataSet, function(d) {
+                        return d.amount;
+                    }),
+                ])
+                .range([0, 300]);
+
+
+
+
+            var OB_rect = make_ob(svg, "rect", fDataSet).attr({
+                x: rect_p + p,
+                y: function(d, i) {
+                    return p + (lineHeight * i) - 12;
+                },
+                width: function(d, i) {
+                    return xScale(d.amount);
+                },
+                height: 15,
+                fill: "red"
+            });
+
+            var OB_text = make_ob(svg, "text", fDataSet).attr({
+                x: p,
+                y: function(d, i) {
+                    return p + (lineHeight * i);
+                },
+                fill: "black",
+                "font-size": 12,
+            }).text(
+                function(d) {
+                    return d.industry + " (" + (Math.round(d.amount / 10000000) / 100) + "G)";
+                })
+            //console.log(OB_rect[0].length);
+
+            //X座標軸
+            var xAxis = d3.svg.axis()
+                .scale(xScale)
+                .ticks(5)
+                .tickFormat(function(d) {
+                    return d / 1000000000 + "G";
+                });
+
+            svg.append("g")
+                .attr({
+                    'class': 'axis'
+                })
+                .attr("transform", "translate(" + (rect_p + p) + "," + (lineHeight * OB_rect[0].length) + ")")
+                .call(xAxis);
+
+        });
+
+        //CSV預處理
+        function mid(d) {
+            d.number = +d.number;
+            d.amount = +d.amount;
+            return d;
+        }
+
+
+        //------------------------ 作業2,3,4 ---------------------------------
+        d3.select("body").append("hr");
+
+        
+        //用d3讀取csv 發票
+        d3.csv("invoice.csv", mid_hw4, function(dataSet) {
+
+            dataSet_hw4 = dataSet.filter(function(d) {
+                return d.amount > 1000000000
+            });
+            
+            var setting = {xData:"date", yData:"number", rData:"amount", sData1:"city", sData2:"industry"};
+            create_2dScatter(dataSet_hw4, setting);
+
+        });
+
+        function mid_hw4(d) {
+            d.number = +d.number;
+            d.amount = +d.amount;
+            return d;
+        }
+
+        
+        
+
+        //------------------------ 作業5 癌症發生率---------------------------------
+        
+        
+//        //用d3讀取csv 癌症
+//        d3.csv("cancer_data.csv", mid, function(dataSet) {
+//            //console.table(dataSet);
+//            dataSet = dataSet;
+//            
+//            var setting = {xData:"date", yData:"age_rate", rData:"count", sData1:"city", sData2:"category"};
+//            create_2dScatter(dataSet, setting);
+//
+//        });
+//        
+//        function mid(d) {
+//            d.age_rate = +d.age_rate;
+//            d.date = +d.date;
+//            d.count = +d.count;
+//            return d;
+//        }
+        
+        
+
+        //------------------------ 作業6 動畫---------------------------------
+        var svg_hw6 = d3.select("body").append("svg").attr({
+            width: "340",
+            height: "340"
+        });
+
+        svg_hw6.append("g").append("rect").attr({
+            fill: "white",
+            width: "100%",
+            height: "100%"
+        });
+
+        //--------------------------------
+
+        var easeArr = ["linear", "quad", "cubic", "sin", "exp", "circle", "elastic", "back", "bounce"];
+
+        bind_hw6(easeArr);
+        render_hw6();
+
+        function bind_hw6(dataSet) {
+            var selection_circle = svg_hw6.selectAll("circle").data(dataSet);
+            var selection_text = svg_hw6.selectAll("text").data(dataSet);
+            var selection_line = svg_hw6.selectAll("line").data(dataSet);
+
+            // 初始化設定
+            selection_line.enter().append("line").attr({
+                x1: 100,
+                y1: function(d, i) {
+                    return 20 + i * 35;
+                },
+                x2: 300,
+                y2: function(d, i) {
+                    return 20 + i * 35;
+                },
+                stroke: "lightgreen"
+            }).text(function(d) {
+                return d;
+            });
+            selection_line.exit().remove();
+
+            selection_circle.enter().append("circle").attr({
+                cx: 100,
+                cy: function(d, i) {
+                    return 20 + i * 35;
+                },
+                r: 15,
+                fill: "gold"
+            });
+            selection_circle.exit().remove();
+
+            selection_text.enter().append("text").attr({
+                x: 5,
+                y: function(d, i) {
+                    return 25 + i * 35;
+                },
+                fill: "black"
+            }).text(function(d) {
+                return d;
+            });
+            selection_text.exit().remove();
+
+
+        }
+
+        function render_hw6() {
+
+
+            //需要動畫的設定
+            svg_hw6.selectAll("circle")
+                .on("click", function(d) {
+                    if (d3.select(this).attr("cx") < 120) {
+                        d3.select(this)
+                            .transition()
+                            .duration(1000)
+                            .ease(d)
+                            .attr({
+                                cx: 300
+                            })
+                    } else {
+                        d3.select(this)
+                            .transition()
+                            .duration(1000)
+                            .ease(d)
+                            .attr({
+                                cx: 100
+                            })
+                    }
+
+                });
+
+
+        }
+    </script>
+
+
+
+
+
+
+</body>
+
+</html>
